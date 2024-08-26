@@ -1,0 +1,20 @@
+.radarr-wrapper {
+    font-size: 14px;
+}
+
+.radarr-section {
+    margin-bottom: 20px;
+}
+
+.radarr-section h2 {
+    margin-bottom: 10px;
+}
+
+.radarr-section ul {
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.radarr-section li {
+    margin-bottom: 5px;
+}
