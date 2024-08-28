@@ -35,7 +35,7 @@ Add the following configuration to your `config/config.js` file:
         baseUrl: "http://localhost:8989",
         upcomingLimit: 5,
         historyLimit: 5,
-        updateInterval: 15 * 60 * 1000, // 15 minutes
+        updateInterval: 1 * 60 * 1000, // 1 minute
     }
 },
 ```

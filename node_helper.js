@@ -25,21 +25,26 @@ module.exports = NodeHelper.create({
     },
 
     getUpcoming: function() {
-        const apiUrl = `${this.config.baseUrl}/feed/v3/calendar/radarr.ics`;
+        const apiUrl = `${this.config.baseUrl}/api/v3/calendar`;
+        const today = new Date();
+        const futureDate = new Date(today.getTime() + (200 * 24 * 60 * 60 * 1000)); // 200 days in the future
+        
         const params = new URLSearchParams({
-            pastDays: 0,
-            futureDays: 200,
+            start: today.toISOString(),
+            end: futureDate.toISOString(),
             unmonitored: false,
         });
 
         this.sendRequest(apiUrl, params, (response) => {
-            const events = this.parseICS(response);
-            const upcoming = events
-                .filter(event => event.title.toLowerCase().includes('digital release'))
-                .sort((a, b) => a.start - b.start)
-                .slice(0, this.config.upcomingLimit);
+            const upcoming = response
+                
+                // .filter(event => event.hasFile === false)
+                .map(event => ({
+                    title: event.title,
+                    start: event.digitalRelease || event.inCinemas,
+                }));
             this.sendSocketNotification("RADARR_UPCOMING", upcoming);
-        }, true);
+        });
     },
 
     getHistory: function() {
@@ -58,7 +63,7 @@ module.exports = NodeHelper.create({
         });
     },
 
-    sendRequest: function(apiUrl, params, callback, raw = false) {
+    sendRequest: function(apiUrl, params, callback) {
         const fullUrl = `${apiUrl}?${params.toString()}`;
         const parsedUrl = url.parse(fullUrl);
         
@@ -82,15 +87,11 @@ module.exports = NodeHelper.create({
             });
 
             res.on('end', () => {
-                if (raw) {
-                    callback(data);
-                } else {
-                    try {
-                        const jsonData = JSON.parse(data);
-                        callback(jsonData);
-                    } catch (error) {
-                        console.error("Error parsing JSON:", error);
-                    }
+                try {
+                    const jsonData = JSON.parse(data);
+                    callback(jsonData);
+                } catch (error) {
+                    console.error("Error parsing JSON:", error);
                 }
             });
         });
@@ -101,38 +102,4 @@ module.exports = NodeHelper.create({
 
         req.end();
     },
-
-    parseICS: function(icsData) {
-        const lines = icsData.split('\n');
-        const events = [];
-        let currentEvent = null;
-
-        for (let line of lines) {
-            line = line.trim();
-
-            if (line === 'BEGIN:VEVENT') {
-                currentEvent = {};
-            } else if (line === 'END:VEVENT') {
-                if (currentEvent) {
-                    events.push(currentEvent);
-                    currentEvent = null;
-                }
-            } else if (currentEvent) {
-                const [key, value] = line.split(':');
-                switch (key) {
-                    case 'SUMMARY':
-                        currentEvent.title = value;
-                        break;
-                    case 'DTSTART':
-                        currentEvent.start = new Date(value);
-                        break;
-                    case 'DESCRIPTION':
-                        currentEvent.description = value;
-                        break;
-                }
-            }
-        }
-
-        return events;
-    }
 });

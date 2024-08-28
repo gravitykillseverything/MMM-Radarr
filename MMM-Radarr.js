@@ -4,7 +4,7 @@ Module.register("MMM-Radarr", {
         baseUrl: "http://localhost:8989",
         upcomingLimit: 5,
         historyLimit: 5,
-        updateInterval: 15 * 60 * 1000, // 15 minutes
+        updateInterval: 1 * 60 * 1000, // 1 minutes
         
     },
 
@@ -22,16 +22,20 @@ Module.register("MMM-Radarr", {
         const wrapper = document.createElement("div");
         wrapper.className = "radarr-wrapper";
 
-        const upcomingSection = this.createSection("Upcoming Movies", this.upcoming);
-        const historySection = this.createSection("Recently Downloaded", this.history);
+        if (this.config.upcomingLimit > 0) {
+            const upcomingSection = this.createSection("Upcoming Movies", this.upcoming, this.config.upcomingLimit);
+            wrapper.appendChild(upcomingSection);
+        }
 
-        wrapper.appendChild(upcomingSection);
-        wrapper.appendChild(historySection);
+        if (this.config.historyLimit > 0) {
+            const historySection = this.createSection("Recently Downloaded", this.history, this.config.historyLimit);
+            wrapper.appendChild(historySection);
+        }
 
         return wrapper;
     },
 
-    createSection: function(title, data) {
+    createSection: function(title, data, limit) {
         const section = document.createElement("div");
         section.className = "radarr-section";
 
@@ -40,15 +44,25 @@ Module.register("MMM-Radarr", {
         section.appendChild(header);
 
         const list = document.createElement("ul");
+                
+        // Create a Set to store unique entries
+        const uniqueEntries = new Set();
+        
         data.forEach(item => {
-            const listItem = document.createElement("li");
+            let entryText;
+
             if (title === "Upcoming Movies") {
-                const date = new Date(item.start);
-                listItem.textContent = `${item.title}`;
+                entryText = `${item.title}`;
             } else {
-                listItem.textContent = `${item.movie.title} (${item.movie.year})`;
+                entryText = `${item.movie.title} (${item.movie.year})`;
             }
-            list.appendChild(listItem);
+
+            if (!uniqueEntries.has(entryText) && uniqueEntries.size < limit) {
+                uniqueEntries.add(entryText);
+                const listItem = document.createElement("li");
+                listItem.textContent = entryText;
+                list.appendChild(listItem);
+            }
         });
 
         section.appendChild(list);
