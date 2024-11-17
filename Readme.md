@@ -8,6 +8,11 @@ MMM-Radarr is a MagicMirror² module that displays upcoming shows and recently d
 - Displays recently downloaded episodes
 - Configurable update interval and display limits
 
+## Screenshot
+
+![screenshot](screenshot.png)
+
+
 ## Installation
 
 1. Navigate to your MagicMirror's `modules` directory:
@@ -19,7 +24,6 @@ MMM-Radarr is a MagicMirror² module that displays upcoming shows and recently d
     ```bash
     git clone https://github.com/gravitykillseverything/MMM-Radarr.git
     ```
-
 
 
 ## Configuration
